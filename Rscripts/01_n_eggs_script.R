@@ -45,7 +45,7 @@ max_eggs_per_bean <- treatment_data %>%
   geom_point() +
   facet_grid(.~temperature)
 
-# Plot the toal number of eggs 
+# Plot the total number of eggs 
 total_eggs <- treatment_data %>% 
   ggplot(aes(x = number_beans, y = mean_total_eggs)) +
   geom_point() +
