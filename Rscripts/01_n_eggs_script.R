@@ -160,6 +160,8 @@ mean_eggs_per_bean_plot<- basicData %>%
   geom_point() +
   facet_grid(.~temperature)
 
+mean_eggs_per_bean_plot
+
 # A model to describe the shape of the relationship
 model_glm_mean_eggs_per_bean <- glm(mean_eggs_on_bean ~   number_beans*temperature,  
                                     family = poisson(link = "log"), data= basicData)
