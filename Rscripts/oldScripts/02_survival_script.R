@@ -1,32 +1,7 @@
 library(tidyverse)
 theme_set(theme_bw())
-emergence_data <- readxl::read_excel("Data/survivalCount.xlsx")
-View(emergence_data)
-# Align emergence data with egg data. NB Not calculated sex ratio yet
-emergenceSums <- emergence_data %>% 
-  group_by(sample_code) %>% 
-  summarise(total_emergence = sum(count)) %>% 
-  left_join(eggSums, by = "sample_code") %>%    # join up with the egg count data (egg_sums)
-  mutate(prop_emergence = total_emergence/total_eggs)
 
-# Calculate the means at the correct replica unit
-emergence_data <-emergenceSums %>% 
-  group_by(temp_treatment, number_beans, n_females, bean_type) %>%
-  summarise(mean_total_eggs = ceiling(mean(total_eggs)),
-            mean_total_eggs_sd = sd(total_eggs),
-            mean_eggs_on_bean = ceiling(mean(mn_eggs_on_bean)),
-            mean_eggs_on_bean_sd = sd(mn_eggs_on_bean),
-            max_eggs_on_bean = mean(max_eggs_on_bean),
-            n = n(),
-            mean_emergence_rate = mean(prop_emergence, na.rm = TRUE),
-            mean_total_emergence = ceiling(mean(total_emergence, na.rm = TRUE))) %>% 
-  # Split up the temp_treatment variable- this is useful for ploting later
-  separate(temp_treatment, 
-           into = c("temperature", "temp_cabinent"), 
-           sep = "_", extra = "drop", remove = "FALSE")
-
-
-
+load("outputs/emergence_data.RData")
 
 # Now we can plot/ model the emergence rate
 
@@ -35,8 +10,6 @@ basic_emergence_data <- emergence_data %>%
   filter(bean_type == "BEB") %>% 
   ungroup %>% 
   mutate(number_beans = as.numeric(number_beans)) 
-
-basic_emergence_data <- basic_emergence_data[1:7,]
 
 emergence_rate_plot <- basic_emergence_data %>% 
   ggplot(aes(x = number_beans, y = mean_emergence_rate)) +

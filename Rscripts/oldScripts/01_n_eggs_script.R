@@ -11,7 +11,7 @@ eggSums <- egg_data %>%
   summarise(total_eggs = sum(n_eggs),
             max_eggs_on_bean = max(n_eggs_on_bean))
 
-#### Calculate the median eggs per bean
+#### Calculate the mean eggs per bean
 calc_mean_eggs_per_bean <- function(x){
     y <- x$n_eggs_on_bean
     z  <- x$count
@@ -43,10 +43,10 @@ eggSums <- eggSums %>%
 treatment_data <-eggSums %>% 
   group_by(temp_treatment, number_beans, n_females, bean_type) %>%
   summarise(mean_total_eggs = ceiling(mean(total_eggs)),
-            mean_total_eggs_sd = sd(total_eggs),
+            # mean_total_eggs_sd = sd(total_eggs),
             mean_eggs_on_bean = ceiling(mean(mn_eggs_on_bean)),
-            mean_eggs_on_bean_sd = sd(mn_eggs_on_bean),
-            max_eggs_on_bean = mean(max_eggs_on_bean),
+           # mean_eggs_on_bean_sd = sd(mn_eggs_on_bean),
+            max_eggs_on_bean = ceiling(mean(max_eggs_on_bean)),
             n = n()) %>% 
   # Split up the temp_treatment variable- this is useful for ploting later
   separate(temp_treatment, 
