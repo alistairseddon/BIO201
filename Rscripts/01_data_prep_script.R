@@ -1,6 +1,5 @@
 ### BIO201 Bean Beetle experiment
 library(tidyverse)
-theme_set(theme_bw())
 egg_data <- readxl::read_excel("Data/eggCount.xlsx")
 
 # Find the total number of eggs per treatment, and the mean number of eggs per bean
@@ -27,7 +26,7 @@ treatment_data <-eggSums %>%
   group_by(temp_treatment, number_beans, n_females, bean_type) %>%
   summarise(mean_total_eggs = ceiling(mean(total_eggs)),
             mean_egg_bean_ratio = ceiling(mean(egg_bean_ratio)),
-            max_egg_bean_ratio = ceiling(mean(egg_bean_ratio)),
+            #max_egg_bean_ratio = ceiling(mean(egg_bean_ratio)),
             n = n()) %>% 
   # Split up the temp_treatment variable- this is useful for ploting later
   separate(temp_treatment, 
@@ -39,14 +38,18 @@ treatment_data <- treatment_data %>%
   ungroup() %>% 
   mutate(number_beans = as.numeric(number_beans))
 
+
+
+treatment_data <- treatment_data %>% 
+  rename(mean_eggs_per_bean = mean_egg_bean_ratio) # CHANGED THIS!
+
+
 save(treatment_data, file = "outputs/treatment_data.RData")
 
 
 ######## We can also process the emergence data
 
-emergence_data <- readxl::read_excel("Data/survivalCount.xlsx") %>% 
-  filter(sample_code != "G6_28_B_135")
-
+emergence_data <- readxl::read_excel("Data/survivalCount_NEW.xlsx")
 View(emergence_data)
 
 # Align emergence data with egg data. NB Not calculated sex ratio yet
@@ -70,9 +73,10 @@ emergence_data <-emergenceSums %>%
            sep = "_", extra = "drop", remove = "FALSE")
 
 # change the number_beans value from a "character" to a numeric column
-treatment_data <- treatment_data %>%
+emergence_data <- emergence_data %>%
   ungroup() %>% 
-  mutate(number_beans = as.numeric(number_beans))
+  mutate(number_beans = as.numeric(number_beans)) %>% 
+  rename(mean_eggs_per_bean = mean_egg_bean_ratio)  ### CHANGED THIS!
 
 save(emergence_data, file = "outputs/emergence_data.RData")
 

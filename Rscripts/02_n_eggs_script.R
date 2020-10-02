@@ -1,16 +1,16 @@
 library("tidyverse")
 library("broom")
 library("GGally")
+theme_set(theme_bw())
 
+#NB: throughout script- Changed name of variable to mean_eggs_per_bean
 
 load("outputs/treatment_data.RData")
-treatment_data
 
 ##### TOTAL NUMBER OF EGGS- BASIC (i.e. removing mung beans and extra females)
 basicData <- treatment_data %>% 
   filter(n_females == 1) %>% 
   filter(bean_type == "BEB")
-
 
 # Plot the total number of eggs 
 total_eggs <- basicData %>% 
@@ -51,42 +51,42 @@ total_eggs_plot_glm
 summary(model_glm)
 
 # Can use the ggcoef function in GGally to visualise these results
-ggcoef(model_glm)
+ggcoef(model_glm,exclude_intercept = TRUE)
 
 
 
 
 
 #####################
-######### Modelling the Egg-bean Ratio
+######### Modelling the Mean eggs per bean
 #####################
 
 # We could try to fit a similar model but instead testing for the egg:bean ratio
 #  Plot the mean number of eggs per bean
-mean_egg_bean_ratio_plot<- basicData %>% 
-  ggplot(aes(x = number_beans, y = mean_egg_bean_ratio )) +
+mean_eggs_per_bean_plot<- basicData %>% 
+  ggplot(aes(x = number_beans, y = mean_eggs_per_bean )) +
   geom_point() +
   facet_grid(.~temperature)
 
-mean_egg_bean_ratio_plot
+mean_eggs_per_bean_plot
 
 # A model to describe the shape of the relationship
-model_glm_egg_bean_ratio <- glm(mean_egg_bean_ratio ~   number_beans*temperature,  
+model_glm_mean_eggs_per_bean <- glm(mean_eggs_per_bean ~   number_beans*temperature,  
                                     family = poisson(link = "log"), data= basicData)
-model_glm_egg_bean_ratio_pred <- predict(model_glm_egg_bean_ratio, 
+model_glm_mean_eggs_per_bean_pred <- predict(model_glm_mean_eggs_per_bean, 
                                          newdata = toPredict, 
                                          type = "response")
 # Store the results in a dataframe for plotting
 predicted_data <- data.frame( number_beans = toPredict$number_beans,
                               temperature = toPredict$temperature,
-                              mean_egg_bean_ratio = model_glm_egg_bean_ratio_pred)
+                              mean_eggs_per_bean = model_glm_mean_eggs_per_bean_pred)
 
 
-mean_egg_bean_ratio_plot_glm <- mean_egg_bean_ratio_plot +
+mean_eggs_per_bean_plot_glm <- mean_eggs_per_bean_plot +
   geom_line(data = predicted_data ,col = "blue", size = 0.75)
-mean_egg_bean_ratio_plot_glm
+mean_eggs_per_bean_plot_glm
 
-summary(model_glm_egg_bean_ratio)
+summary(model_glm_mean_eggs_per_bean)
 
 
 
@@ -94,25 +94,45 @@ summary(model_glm_egg_bean_ratio)
 ### Group 1 were not interested in temperature, but instead of the effects of the number of females
 ##########
 
+#Filtering unnnecessary parameters
 grp1_data <- treatment_data %>% 
   filter(temperature == 28) %>% 
-  filter(bean_type == "BEB")
+  filter(bean_type == "BEB") %>% 
+  mutate(n_females_factor="1 Female")%>%
+  mutate(n_females_factor=replace(n_females_factor, n_females==2, "2 Females")) %>%
+  as.data.frame()
 
-# Can make similar plots, but facet_grid by n_females instead
+#Plot
 mean_eggs_per_bean_plot_females<- grp1_data %>% 
-  ggplot(aes(x = number_beans, y = mean_egg_bean_ratio)) +
+  ggplot(aes(x = number_beans, y = mean_eggs_per_bean)) +
   geom_point() +
-  facet_grid(.~n_females)
+  labs(y= "Mean eggs per bean", x = "Number of beans") + 
+  ggtitle ("The affects of competition on egg laying") +
+  theme(plot.title = element_text(size=13, face="bold", hjust = 0.5)) +
+  facet_grid(.~n_females_factor)
 
-total_eggs_per_bean_plot_females<- grp1_data %>% 
-  ggplot(aes(x = number_beans, y = mean_total_eggs)) +
-  geom_point() +
-  facet_grid(.~n_females)
+#Predictions
+model_glm_mean_eggs_per_bean <- glm(mean_eggs_per_bean ~ number_beans*n_females_factor, 
+                                family = poisson(link = "log"), data= grp1_data)
 
+toPredict <- data.frame(number_beans = rep(5:135, 2), n_females_factor = c(rep("1 Female", length(5:135)), rep("2 Females", length(5:135))))
 
-## You could try to fit similar models to the models above
+model_glm_mean_eggs_per_bean_pred <- predict(model_glm_mean_eggs_per_bean, 
+                                         newdata = toPredict, 
+                                         type = "response")
+#Stored results
+predicted_data <- data.frame(number_beans = toPredict$number_beans,
+                             n_females_factor = toPredict$n_females,
+                             mean_eggs_per_bean = model_glm_mean_eggs_per_bean_pred)
 
+# added predictions
+mean_eggs_plot_glm <- mean_eggs_per_bean_plot_females + 
+  geom_line(data = predicted_data, col = "blue", size = 0.75)
+mean_eggs_plot_glm
+summary(model_glm_mean_eggs_per_bean)
 
+# visualise
+ggcoef(model_glm_mean_eggs_per_bean,exclude_intercept = TRUE)
 
 
 
@@ -123,12 +143,22 @@ mungBean <- treatment_data %>%
   filter(number_beans != 15) %>% 
   filter(number_beans != 45) %>% 
   filter(temperature == 28) %>% 
-  filter(n_females == 1)
+  filter(n_females == 1) %>% 
+  mutate(number_beans_factor = as_factor(number_beans))
 
 # Now we can plot these data-
-mung_bean_eggs_on_bean_plot<- mungBean %>% 
-  ggplot(aes(x = number_beans, y = mean_egg_bean_ratio, group = bean_type)) +
-  geom_point(aes(color = bean_type)) %>% 
-  facet_grid(.~ bean_type)
+mung_bean_total_eggs_plot<- mungBean %>% 
+  ggplot(aes(x = bean_type, y = mean_total_eggs)) +
+  geom_point(aes(color = bean_type)) +
+  facet_grid(.~ number_beans_factor) +
+  theme(legend.position="none")
 
-# Check with Group 5 if all the data are present..
+# Do the modelling
+beanType_m1 <- glm(mean_total_eggs ~ bean_type * number_beans, 
+                   data = mungBean, family = poisson(link = "log"))
+summary(beanType_m1)
+
+beanType_m2 <- glm(mean_total_eggs ~ bean_type, 
+                   data = mungBean, family = poisson(link = "log"))
+summary(beanType_m2)
+
