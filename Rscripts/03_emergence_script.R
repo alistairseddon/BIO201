@@ -1,7 +1,7 @@
 library(tidyverse)
 theme_set(theme_bw())
 load("outputs/emergence_data.RData")
-emergence_data
+
 # Now we can plot/ model the emergence rate
 
 basic_emergence_data <- emergence_data %>% 
@@ -139,7 +139,7 @@ total_emergence_plot_asym <- basic_emergence_data %>%
   geom_point() +
   facet_grid(.~temperature) +
   geom_line(data = predicted_data_total_emergence,col = "blue", size = 0.75)
-emergence_rate_plot_asym
+total_emergence_plot_asym
 
 summary(asymModel_28)
 summary(asymModel_24)
@@ -189,6 +189,14 @@ modelGP5_total_emergence <- glm(mean_total_emergence ~ bean_type*number_beans_fa
                 data = GP_5_emergence,
                 family = poisson(link = "log"))
 summary(modelGP5_total_emergence)
+
+
+eggSums %>%
+  group_by(temperature, temp_treatment, number_beans) %>% 
+  summarise(mean_eggs = mean(total_eggs)) %>% 
+  ungroup() %>% 
+  group_by(temperature, number_beans) %>% 
+  summarise(mean_eggs = mean(mean_eggs))
 
 
 

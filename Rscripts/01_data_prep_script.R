@@ -21,6 +21,8 @@ eggSums <- eggSums %>%
   mutate(n_females = replace(n_females, extra_treatment == "(2F)", 2)) %>% 
   mutate(bean_type = replace(bean_type, grep("m", extra_treatment, ignore.case= TRUE), "Mung")) 
 
+save(eggSums, file= "outputs/eggSums.RData")
+
 # Then this allows you to calculate the plotting data at the correct treatment level according to the treatment
 treatment_data <-eggSums %>% 
   group_by(temp_treatment, number_beans, n_females, bean_type) %>%
